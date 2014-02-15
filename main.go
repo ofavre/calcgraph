@@ -26,10 +26,8 @@ type Result struct {
 //////////////
 
 func LoopNode(tExecutor executor.Executor, node Node) Node {
-	switch runer := node.(type) {
-		case executor.Runer:
-			tExecutor.Loop(runer)
-	}
+	runer := node.(executor.Runer)
+	tExecutor.Loop(runer)
 	// Fluent
 	return node
 }
