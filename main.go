@@ -12,7 +12,7 @@ type ResChan	chan Result
 type DataChan	chan Data
 
 type Node interface {
-	GetOut() DataChan
+	Out() DataChan
 }
 
 type Result struct {
@@ -26,10 +26,11 @@ type Result struct {
 //////////////
 
 func LoopNode(tExecutor executor.Executor, node Node) Node {
-	switch runable := node.(type) {
-		case executor.InterruptibleRunable:
-			executor.LoopInterruptible(tExecutor, runable)
+	switch runer := node.(type) {
+		case executor.Runer:
+			tExecutor.Loop(runer)
 	}
+	// Fluent
 	return node
 }
 
@@ -53,7 +54,7 @@ func (node SourceNode) Run(quitChan executor.QuitChan) {
 	}
 }
 
-func (node SourceNode) GetOut() DataChan {
+func (node SourceNode) Out() DataChan {
 	return node.out
 }
 
@@ -66,7 +67,7 @@ type SuckNode struct {
 }
 
 func NewSuckNode(in Node) *SuckNode {
-	return &SuckNode{in.GetOut()}
+	return &SuckNode{in.Out()}
 }
 
 func (node SuckNode) Run(quitChan executor.QuitChan) {
@@ -76,7 +77,7 @@ func (node SuckNode) Run(quitChan executor.QuitChan) {
 	}
 }
 
-func (node SuckNode) GetOut() DataChan {
+func (node SuckNode) Out() DataChan {
 	return nil
 }
 
@@ -92,7 +93,7 @@ type AddNode struct {
 }
 
 func NewAddNode(in1, in2 Node) *AddNode {
-	return &AddNode{make(DataChan), in1.GetOut(), in2.GetOut()};
+	return &AddNode{make(DataChan), in1.Out(), in2.Out()};
 }
 
 func (node AddNode) Run(quitChan executor.QuitChan) {
@@ -127,7 +128,7 @@ func (node AddNode) Run(quitChan executor.QuitChan) {
 	}
 }
 
-func (node AddNode) GetOut() DataChan {
+func (node AddNode) Out() DataChan {
 	return node.out
 }
 
@@ -143,7 +144,7 @@ type ObserverNode struct {
 }
 
 func NewObserverNode(obsChan ResChan, in Node) *ObserverNode {
-	return &ObserverNode{make(DataChan), in.GetOut(), in, obsChan}
+	return &ObserverNode{make(DataChan), in.Out(), in, obsChan}
 }
 
 func (node ObserverNode) Run(quitChan executor.QuitChan) {
@@ -163,7 +164,7 @@ func (node ObserverNode) Run(quitChan executor.QuitChan) {
 	}
 }
 
-func (node ObserverNode) GetOut() DataChan {
+func (node ObserverNode) Out() DataChan {
 	return node.out
 }
 
@@ -190,7 +191,7 @@ func GoPrintObs(tExecutor executor.Executor) ResChan {
 //////////
 
 func main() {
-	tExecutor := executor.NewExecutor()
+	tExecutor := executor.New()
 
 	obsChan := GoPrintObs(tExecutor)
 
@@ -210,6 +211,6 @@ func main() {
 	fmt.Printf("%#v\n", s1)
 
 	time.Sleep(2 * time.Millisecond)
-	tExecutor.WaitInterrupt()
+	tExecutor.Interrupt()
 	fmt.Println("Quitting")
 }

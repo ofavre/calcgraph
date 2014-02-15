@@ -11,7 +11,7 @@ import (
 
 type QuitChan chan bool
 
-type InterruptibleRunable interface {
+type Runer interface {
 	Run(QuitChan)
 }
 
@@ -20,7 +20,7 @@ type Executor struct {
 	waitGroup	sync.WaitGroup
 }
 
-func NewExecutor() Executor {
+func New() Executor {
 	return Executor{quitChan: make(QuitChan, 100)}
 }
 
@@ -34,7 +34,7 @@ func (executor Executor) Run(routine func(QuitChan)) func(QuitChan) {
 	return routine
 }
 
-func LoopInterruptible(executor Executor, runable InterruptibleRunable) InterruptibleRunable {
+func (executor Executor) Loop(runable Runer) Runer {
 	executor.Run(func(quitChan QuitChan) {
 		RunLoop: for {
 			select {
@@ -49,11 +49,16 @@ func LoopInterruptible(executor Executor, runable InterruptibleRunable) Interrup
 	return runable
 }
 
-func (executor Executor) WaitInterrupt() {
+func (executor Executor) Wait() {
+	// Wait for the WaitGroup to be entirely closed
+	executor.waitGroup.Wait()
+}
+
+func (executor Executor) Interrupt() {
 	// Wait for the WaitGroup to be entirely closed,
 	// then close the quitChan
 	go func() {
-		executor.waitGroup.Wait()
+		executor.Wait()
 		close(executor.quitChan)
 	}()
 	defer func() {
