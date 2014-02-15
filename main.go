@@ -36,6 +36,9 @@ func LoopNode(tExecutor executor.Executor, node Node) Node {
 // SourceNode //
 ////////////////
 
+var _ Node = (*SourceNode)(nil)
+var _ executor.Runer = (*SourceNode)(nil)
+
 type SourceNode struct {
 	out	DataChan
 	val	Data
@@ -60,6 +63,9 @@ func (node SourceNode) Out() DataChan {
 // SuckNode //
 //////////////
 
+var _ Node = (*SuckNode)(nil)
+var _ executor.Runer = (*SuckNode)(nil)
+
 type SuckNode struct {
 	inData	DataChan
 }
@@ -83,6 +89,9 @@ func (node SuckNode) Out() DataChan {
 /////////////
 // AddNode //
 /////////////
+
+var _ Node = (*AddNode)(nil)
+var _ executor.Runer = (*AddNode)(nil)
 
 type AddNode struct {
 	out,
@@ -133,6 +142,9 @@ func (node AddNode) Out() DataChan {
 //////////////
 // Observer //
 //////////////
+
+var _ Node = (*ObserverNode)(nil)
+var _ executor.Runer = (*ObserverNode)(nil)
 
 type ObserverNode struct {
 	out		DataChan
