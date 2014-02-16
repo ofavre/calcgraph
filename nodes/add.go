@@ -1,6 +1,7 @@
 package nodes
 
 import (
+	"fmt"
 	"github.com/ofavre/calcgraph/executor"
 )
 
@@ -12,13 +13,15 @@ var _ Node = (*AddNode)(nil)
 var _ executor.Runer = (*AddNode)(nil)
 
 type AddNode struct {
-	out,
+	out DataChan
+	inNode1,
+	inNode2 Node
 	in1,
 	in2	DataChan
 }
 
 func NewAddNode(in1, in2 Node) *AddNode {
-	return &AddNode{make(DataChan), in1.Out(), in2.Out()};
+	return &AddNode{make(DataChan), in1, in2, in1.Out(), in2.Out()};
 }
 
 func (node AddNode) Run(quitChan executor.QuitChan) {
@@ -55,4 +58,8 @@ func (node AddNode) Run(quitChan executor.QuitChan) {
 
 func (node AddNode) Out() DataChan {
 	return node.out
+}
+
+func (node AddNode) String() string {
+	return fmt.Sprintf("%T{%v + %v}", node, node.inNode1, node.inNode2)
 }

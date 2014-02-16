@@ -1,6 +1,7 @@
 package nodes
 
 import (
+	"fmt"
 	"github.com/ofavre/calcgraph/executor"
 )
 
@@ -29,4 +30,8 @@ func (node SourceNode) Run(quitChan executor.QuitChan) {
 
 func (node SourceNode) Out() DataChan {
 	return node.out
+}
+
+func (node SourceNode) String() string {
+	return fmt.Sprintf("%T{%v}", node, node.val)
 }
