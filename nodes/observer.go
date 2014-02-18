@@ -60,7 +60,6 @@ func GoPrintObs(tExecutor executor.Executor) ResChan {
 					fmt.Printf("Obs: %#v\n", res)
 			}
 		}
-		// FIXME Not always visible in the console, but always visible in a pipe…
 		fmt.Println("Observer stopped")
 	})
 	return resChan

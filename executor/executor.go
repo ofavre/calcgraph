@@ -17,14 +17,14 @@ type Runer interface {
 
 type Executor struct {
 	quitChan	QuitChan
-	waitGroup	sync.WaitGroup
+	waitGroup	*sync.WaitGroup
 }
 
 func New() Executor {
-	return Executor{quitChan: make(QuitChan, 100)}
+	return Executor{make(QuitChan, 100), new(sync.WaitGroup)}
 }
 
-func (executor Executor) Run(routine func(QuitChan)) func(QuitChan) {
+func (executor *Executor) Run(routine func(QuitChan)) func(QuitChan) {
 	executor.waitGroup.Add(1)
 	go func() {
 		routine(executor.quitChan)
@@ -34,7 +34,7 @@ func (executor Executor) Run(routine func(QuitChan)) func(QuitChan) {
 	return routine
 }
 
-func (executor Executor) Loop(runable Runer) Runer {
+func (executor *Executor) Loop(runable Runer) Runer {
 	executor.Run(func(quitChan QuitChan) {
 		RunLoop: for {
 			select {
@@ -49,12 +49,12 @@ func (executor Executor) Loop(runable Runer) Runer {
 	return runable
 }
 
-func (executor Executor) Wait() {
+func (executor *Executor) Wait() {
 	// Wait for the WaitGroup to be entirely closed
 	executor.waitGroup.Wait()
 }
 
-func (executor Executor) Interrupt() {
+func (executor *Executor) Interrupt() {
 	// Wait for the WaitGroup to be entirely closed,
 	// then close the quitChan
 	go func() {
