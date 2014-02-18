@@ -48,7 +48,7 @@ func (node ObserverNode) String() string {
 	return fmt.Sprintf("%T{%v}", node, node.inNode)
 }
 
-func GoPrintObs(tExecutor executor.Executor) ResChan {
+func GoPrintObs(tExecutor *executor.Executor) ResChan {
 	resChan := make(ResChan)
 	tExecutor.Run(func(quitChan executor.QuitChan) {
 		fmt.Println("Observer started")

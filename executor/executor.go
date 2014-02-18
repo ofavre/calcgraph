@@ -20,8 +20,8 @@ type Executor struct {
 	waitGroup	*sync.WaitGroup
 }
 
-func New() Executor {
-	return Executor{make(QuitChan, 100), new(sync.WaitGroup)}
+func New() *Executor {
+	return &Executor{make(QuitChan, 100), new(sync.WaitGroup)}
 }
 
 func (executor *Executor) Run(routine func(QuitChan)) func(QuitChan) {

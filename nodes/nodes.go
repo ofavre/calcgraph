@@ -22,7 +22,7 @@ type Result struct {
 // Executor //
 //////////////
 
-func LoopNode(tExecutor executor.Executor, node Node) Node {
+func LoopNode(tExecutor *executor.Executor, node Node) Node {
 	runer := node.(executor.Runer)
 	tExecutor.Loop(runer)
 	// Fluent
