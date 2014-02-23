@@ -13,7 +13,7 @@ Here are the currently avaiable node types:
 * Constant
 * Observer
 * Sink
-* Add (variadic, type promotion)
+* Add/Sub (variadic, type promotion)
 
 A node can either be run in a step by step manner by calling its `Run()` method, or it can be looped over.
 An `Executor` facility permits running or looping a node concurrently, while being easily interruptible.
