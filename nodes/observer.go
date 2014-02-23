@@ -57,7 +57,7 @@ func GoPrintObs(tExecutor *executor.Executor) ResChan {
 				case <-quitChan:
 					break ReadLoop
 				case res := <-resChan:
-					fmt.Printf("Obs: %#v\n", res)
+					fmt.Printf("Obs: %v -> %T(%#v)\n", res.Node, res.Value, res.Value)
 			}
 		}
 		fmt.Println("Observer stopped")

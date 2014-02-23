@@ -13,13 +13,14 @@ Here are the currently avaiable node types:
 * Constant
 * Observer
 * Sink
-* Add (variadic)
+* Add (variadic, type promotion)
 
 A node can either be run in a step by step manner by calling its `Run()` method, or it can be looped over.
 An `Executor` facility permits running or looping a node concurrently, while being easily interruptible.
 
-An `Assembler` facility permits collecting exectly one value from each input `Node` and returning them as an array.
+An `Assembler` facility permits collecting exactly one value from each input `Node` and returning them as an array.
 This helps constructing variadic nodes, as well as synchronizing nodes' work.
+It can optionaly verify that each value is of a given type.
 
 License
 -------

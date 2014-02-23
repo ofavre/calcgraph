@@ -4,7 +4,7 @@ import (
 	"github.com/ofavre/calcgraph/executor"
 )
 
-type Data		float32
+type Data		interface{}
 type ResChan	chan Result
 type DataChan	chan Data
 
@@ -14,7 +14,7 @@ type Node interface {
 
 type Result struct {
 	Node	Node
-	value	Data
+	Value	Data
 }
 
 

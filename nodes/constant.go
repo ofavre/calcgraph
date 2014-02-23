@@ -33,5 +33,5 @@ func (node ConstantNode) Out() DataChan {
 }
 
 func (node ConstantNode) String() string {
-	return fmt.Sprintf("%T{%v}", node, node.val)
+	return fmt.Sprintf("%T{%T(%v)}", node, node.val, node.val)
 }

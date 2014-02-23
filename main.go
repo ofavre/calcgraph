@@ -17,15 +17,15 @@ func main() {
 
 	obsChan := nodes.GoPrintObs(executor)
 
-	var v1 nodes.Node = nodes.LoopNode(executor, nodes.NewConstantNode(1.0))
+	var v1 nodes.Node = nodes.LoopNode(executor, nodes.NewConstantNode(int(1)))
 	fmt.Printf("%v\n", v1)
 	var o1 nodes.Node = nodes.LoopNode(executor, nodes.NewObserverNode(obsChan, v1))
 	fmt.Printf("%v\n", o1)
-	var v2 nodes.Node = nodes.LoopNode(executor, nodes.NewConstantNode(2.0))
+	var v2 nodes.Node = nodes.LoopNode(executor, nodes.NewConstantNode(uint(2)))
 	fmt.Printf("%v\n", v2)
 	var o2 nodes.Node = nodes.LoopNode(executor, nodes.NewObserverNode(obsChan, v2))
 	fmt.Printf("%v\n", o2)
-	var c1 nodes.Node = nodes.LoopNode(executor, nodes.NewAddNode(o1, o2))
+	var c1 nodes.Node = nodes.LoopNode(executor, nodes.NewAddNode(nil, o1, o2))
 	fmt.Printf("%v\n", c1)
 	var o3 nodes.Node = nodes.LoopNode(executor, nodes.NewObserverNode(obsChan, c1))
 	fmt.Printf("%v\n", o3)
