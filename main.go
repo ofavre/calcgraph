@@ -33,7 +33,11 @@ func main() {
 	fmt.Printf("%v\n", c2)
 	var o4 nodes.Node = nodes.LoopNode(executor, nodes.NewObserverNode(obsChan, c2))
 	fmt.Printf("%v\n", o4)
-	var s1 nodes.Node = nodes.LoopNode(executor, nodes.NewSinkNode(o4))
+	var c3 nodes.Node = nodes.LoopNode(executor, nodes.NewMulNode(nil, o3, o4))
+	fmt.Printf("%v\n", c2)
+	var o5 nodes.Node = nodes.LoopNode(executor, nodes.NewObserverNode(obsChan, c3))
+	fmt.Printf("%v\n", o4)
+	var s1 nodes.Node = nodes.LoopNode(executor, nodes.NewSinkNode(o5))
 	fmt.Printf("%v\n", s1)
 
 	time.Sleep(2 * time.Millisecond)

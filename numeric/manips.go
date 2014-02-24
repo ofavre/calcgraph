@@ -23,6 +23,14 @@ func ZeroOfType(typ reflect.Type) interface{} {
 	return reflect.Zero(typ).Interface()
 }
 
+func ConvertToSameType(val, typeOfVal interface{}) interface{} {
+	return ConvertToType(val, reflect.TypeOf(typeOfVal))
+}
+
+func ConvertToType(val interface{}, typ reflect.Type) interface{} {
+	return reflect.ValueOf(val).Convert(typ).Interface()
+}
+
 func Native(val interface{}) interface{} {
     switch val := val.(type) {
         case int:
