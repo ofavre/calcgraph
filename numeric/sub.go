@@ -1,11 +1,11 @@
 package numeric
 
 func Sub(values ...interface{}) interface{} {
-	sum := values[0]
+	diff := values[0]
 	for _, val := range(values[1:]) {
-		sum = sub(sum, val)
+		diff = sub(diff, val)
 	}
-	return sum
+	return diff
 }
 
 func sub(_a, _b interface{}) interface{} {

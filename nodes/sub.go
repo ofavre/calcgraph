@@ -28,7 +28,7 @@ func NewSubNode(typeEnforced reflect.Type, inNodes ...Node) *SubNode {
 func (node SubNode) Run(quitChan executor.QuitChan) {
 	go node.assembler.Run(quitChan)
 	assemblerOut := node.assembler.Out()
-	var sum Data
+	var diff Data
 	var out DataChan = nil
 	CalcLoop: for {
 		select {
@@ -38,17 +38,17 @@ func (node SubNode) Run(quitChan executor.QuitChan) {
 				out = node.out
 				if len(inputs) == 0 {
 					if node.typeEnforced != nil {
-						sum = numeric.ZeroOfType(node.typeEnforced)
+						diff = numeric.ZeroOfType(node.typeEnforced)
 					} else {
-						sum = 0
+						diff = 0
 					}
 				} else {
-					sum = inputs[0]
+					diff = inputs[0]
 					for _, val := range inputs[1:] {
-						sum = numeric.Sub(sum, val)
+						diff = numeric.Sub(diff, val)
 					}
 				}
-			case out <- sum:
+			case out <- diff:
 				break CalcLoop
 		}
 	}
