@@ -30,7 +30,11 @@ func (err TypeMismatchError) Error() string {
 type AssembledData		[]Data
 type AssembledDataChan	chan AssembledData
 
-type collectChan	chan Data
+type PositionedData struct {
+	position	int
+	data		Data
+}
+type collectChan	chan PositionedData
 
 type Assembler struct {
 	typeEnforced	reflect.Type
@@ -51,17 +55,17 @@ func (assembler Assembler) Run(quitChan executor.QuitChan) {
 	missing	:= len(assembler.inNodes)
 	results	:= make(AssembledData, missing)
 	// Start one worker per input node
-	for _, node := range assembler.inNodes {
-		go assemblerWorker(quitChan, node, assembler.collectChan, assembler.typeEnforced)
+	for i, node := range assembler.inNodes {
+		go assemblerWorker(quitChan, node, i, assembler.collectChan, assembler.typeEnforced)
 	}
 	// Collect inputs
 	MainWorkLoop: for {
 		select {
 			case <-quitChan:
 				break MainWorkLoop
-			case val := <-assembler.collectChan:
+			case posVal := <-assembler.collectChan:
 				missing--
-				results[missing] = val
+				results[posVal.position] = posVal.data
 				if missing == 0 {
 					break MainWorkLoop
 				}
@@ -70,7 +74,7 @@ func (assembler Assembler) Run(quitChan executor.QuitChan) {
 	assembler.assembledChan <- results
 }
 
-func assemblerWorker(quitChan executor.QuitChan, node Node, collectChan collectChan, typeEnforced reflect.Type) {
+func assemblerWorker(quitChan executor.QuitChan, node Node, position int, collectChan collectChan, typeEnforced reflect.Type) {
 	select {
 		case <-quitChan:
 			return
@@ -83,7 +87,7 @@ func assemblerWorker(quitChan executor.QuitChan, node Node, collectChan collectC
 				case <-quitChan:
 					return
 				// Transmit the value
-				case collectChan <- val:
+				case collectChan <- PositionedData{position, val}:
 			}
 	}
 }
