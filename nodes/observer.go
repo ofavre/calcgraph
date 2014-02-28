@@ -24,18 +24,27 @@ func NewObserverNode(obsChan ResChan, in Node) *ObserverNode {
 }
 
 func (node ObserverNode) Run(quitChan executor.QuitChan) {
-	var data Data;
+	var data Data
+	var ok bool
 	select {
 		case <-quitChan:
+			close(node.out)
 			return
-		case data = <-node.inData:
+		case data, ok = <-node.inData:
+			if !ok {
+				return
+			}
 	}
 	select {
 		case <-quitChan:
+			close(node.out)
+			return
 		case node.obsChan <- Result{node.inNode, data}:
 	}
 	select {
 		case <-quitChan:
+			close(node.out)
+			return
 		case node.out <- data:
 	}
 }
@@ -56,7 +65,10 @@ func GoPrintObs(tExecutor *executor.Executor) ResChan {
 			select {
 				case <-quitChan:
 					break ReadLoop
-				case res := <-resChan:
+				case res, ok := <-resChan:
+					if !ok {
+						break ReadLoop
+					}
 					fmt.Printf("Obs: %v -> %T(%#v)\n", res.Node, res.Value, res.Value)
 			}
 		}

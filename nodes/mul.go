@@ -33,8 +33,12 @@ func (node MulNode) Run(quitChan executor.QuitChan) {
 	CalcLoop: for {
 		select {
 			case <-quitChan:
+				close(node.out)
 				break CalcLoop
-			case inputs := <-assemblerOut:
+			case inputs, ok := <-assemblerOut:
+				if !ok {
+					break CalcLoop
+				}
 				out = node.out
 				if len(inputs) == 0 {
 					if node.typeEnforced != nil {

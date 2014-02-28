@@ -24,6 +24,7 @@ func NewConstantNode(val Data) *ConstantNode {
 func (node ConstantNode) Run(quitChan executor.QuitChan) {
 	select {
 		case <-quitChan:
+			close(node.out)
 		case node.out <- node.val:
 	}
 }

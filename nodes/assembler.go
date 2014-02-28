@@ -62,8 +62,12 @@ func (assembler Assembler) Run(quitChan executor.QuitChan) {
 	MainWorkLoop: for {
 		select {
 			case <-quitChan:
-				break MainWorkLoop
-			case posVal := <-assembler.collectChan:
+				close(assembler.assembledChan)
+				return
+			case posVal, ok := <-assembler.collectChan:
+				if !ok {
+					break MainWorkLoop
+				}
 				missing--
 				results[posVal.position] = posVal.data
 				if missing == 0 {
@@ -79,7 +83,10 @@ func assemblerWorker(quitChan executor.QuitChan, node Node, position int, collec
 		case <-quitChan:
 			return
 		// Read value to transmit
-		case val := <-node.Out():
+		case val, ok := <-node.Out():
+			if !ok {
+				return
+			}
 			if typeEnforced != nil && typeEnforced != reflect.TypeOf(val) {
 				typeMismatchErrorForTypeOf(typeEnforced, val)
 			}
