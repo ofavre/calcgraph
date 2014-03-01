@@ -21,7 +21,7 @@ type Executor struct {
 }
 
 func New() *Executor {
-	return &Executor{make(QuitChan, 100), new(sync.WaitGroup)}
+	return &Executor{make(QuitChan), new(sync.WaitGroup)}
 }
 
 func (executor *Executor) Run(routine func(QuitChan)) func(QuitChan) {
@@ -55,21 +55,10 @@ func (executor *Executor) Wait() {
 }
 
 func (executor *Executor) Interrupt() {
+	// Closing the QuitChan will unlock every receive operations on it
+	close(executor.quitChan)
+	// Create another one for future reuse of the Executor
+	executor.quitChan = make(QuitChan)
 	// Wait for the WaitGroup to be entirely closed,
-	// then close the quitChan
-	go func() {
-		executor.Wait()
-		close(executor.quitChan)
-	}()
-	defer func() {
-		// Expected:
-		//   (runtime.errorCString) runtime error: send on closed channel,
-		// when the above goroutine has finished waiting for the WaitGroup
-		recover()
-	}()
-	// The following loop breaks in panic when channel closed,
-	// and exits the function cleanly
-	for {
-		executor.quitChan <- true
-	}
+	executor.Wait()
 }
