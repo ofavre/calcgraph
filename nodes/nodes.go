@@ -9,6 +9,7 @@ type ResChan	chan Result
 type DataChan	chan Data
 
 type Node interface {
+	executor.Runer
 	Out() DataChan
 }
 
@@ -23,8 +24,7 @@ type Result struct {
 //////////////
 
 func LoopNode(tExecutor *executor.Executor, node Node) Node {
-	runer := node.(executor.Runer)
-	tExecutor.Loop(runer)
+	tExecutor.Loop(node)
 	// Fluent
 	return node
 }
