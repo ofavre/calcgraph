@@ -13,7 +13,9 @@ Here are the currently avaiable node types:
 * Constant
 * Observer
 * Sink
-* Add/Sub (variadic, type promotion)
+* Add/Sub/Mul (variadic, type promotion)
+* FanIn
+* _(FanOut is automatic and implicit, by branching a node's output to multiple other)_
 
 A node can either be run in a step by step manner by calling its `Run()` method, or it can be looped over.
 An `Executor` facility permits running or looping a node concurrently, while being easily interruptible.
