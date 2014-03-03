@@ -27,74 +27,80 @@ func (err TypeMismatchError) Error() string {
 
 
 
-type AssembledData		[]Data
-type AssembledDataChan	chan AssembledData
-
-type PositionedData struct {
-	position	int
-	data		Data
-}
-type collectChan	chan PositionedData
-
-type Assembler struct {
+type AssemblerNode struct {
+	out				DataChan
 	typeEnforced	reflect.Type
 	inNodes			[]Node
-	assembledChan	AssembledDataChan
-	collectChan		collectChan
+	selectCases		[]reflect.SelectCase
+	remaining		int
+	lastQuitChan	executor.QuitChan
 }
 
-func NewAssembler(typeEnforced reflect.Type, inNodes ...Node) *Assembler {
-	return &Assembler{typeEnforced, inNodes, make(AssembledDataChan), make(collectChan, len(inNodes))}
-}
-
-func (assembler Assembler) Out() AssembledDataChan {
-	return assembler.assembledChan
-}
-
-func (assembler Assembler) Run(quitChan executor.QuitChan) {
-	missing	:= len(assembler.inNodes)
-	results	:= make(AssembledData, missing)
-	// Start one worker per input node
-	for i, node := range assembler.inNodes {
-		go assemblerWorker(quitChan, node, i, assembler.collectChan, assembler.typeEnforced)
+func NewAssemblerNode(typeEnforced reflect.Type, inNodes ...Node) *AssemblerNode {
+	// Construct the select cases from each node
+	selectCases := make([]reflect.SelectCase, 1+len(inNodes)) // first item is reserved for the QuitChan
+	var nilValue reflect.Value
+	for i, node := range inNodes {
+		selectCases[1+i] = reflect.SelectCase{reflect.SelectRecv, reflect.ValueOf(node.Out()), nilValue}
 	}
-	// Collect inputs
-	MainWorkLoop: for {
-		select {
-			case <-quitChan:
-				close(assembler.assembledChan)
-				return
-			case posVal, ok := <-assembler.collectChan:
-				if !ok {
-					break MainWorkLoop
-				}
-				missing--
-				results[posVal.position] = posVal.data
-				if missing == 0 {
-					break MainWorkLoop
-				}
+	return &AssemblerNode{make(DataChan), typeEnforced, inNodes, selectCases, len(inNodes), nil}
+}
+
+func (node AssemblerNode) Out() DataChan {
+	return node.out
+}
+
+func (node *AssemblerNode) Run(quitChan executor.QuitChan) {
+	missing	:= node.remaining
+	results	:= make([]Data, len(node.inNodes))
+	var nilChanValue reflect.Value = reflect.ValueOf(nil)
+	// Update the QuitChan select case if needed
+	if (node.lastQuitChan != quitChan) {
+		var nilValue reflect.Value
+		node.selectCases[0] = reflect.SelectCase{reflect.SelectRecv, reflect.ValueOf(quitChan), nilValue}
+	}
+	// Copy every select cases, they'll be nil-ed out one by one
+	selectCases := make([]reflect.SelectCase, len(node.selectCases))
+	copy(selectCases, node.selectCases[:])
+	// Read each input chan one by one
+	for missing > 0 && node.remaining > 0 {
+		chosen, val, ok := reflect.Select(selectCases)
+		if chosen == 0 { // quitChan
+			close(node.out)
+			return
+		} else {
+			// Got a value from one chan
+			missing--
+			// Don't read this chan again in this call to Run()
+			selectCases[chosen].Chan = nilChanValue
+			// Type enforcement, only if we got a real value, and not a nil for chan closed
+			if ok && node.typeEnforced != nil && node.typeEnforced != reflect.TypeOf(val) {
+				typeMismatchErrorForTypeOf(node.typeEnforced, val)
+			}
+			// Set the corresponding output value
+			results[chosen-1] = Data(val.Interface())
+			// If we got a nil for chan closed, remove the chan
+			if !ok {
+				// We remove it from the object's selectCases,
+				// not to reread it in a future call to Run()
+				node.remaining--
+				node.selectCases[chosen].Chan = nilChanValue
+			}
 		}
 	}
-	assembler.assembledChan <- results
-}
-
-func assemblerWorker(quitChan executor.QuitChan, node Node, position int, collectChan collectChan, typeEnforced reflect.Type) {
-	select {
-		case <-quitChan:
-			return
-		// Read value to transmit
-		case val, ok := <-node.Out():
-			if !ok {
+	// Return the assembled values
+	if missing <= 0 {
+		select {
+			case <-quitChan:
+				close(node.out)
 				return
-			}
-			if typeEnforced != nil && typeEnforced != reflect.TypeOf(val) {
-				typeMismatchErrorForTypeOf(typeEnforced, val)
-			}
-			select {
-				case <-quitChan:
-					return
-				// Transmit the value
-				case collectChan <- PositionedData{position, val}:
-			}
+			case node.out <- results:
+		}
+	}
+	// Close if all our input nodes are closed
+	if node.remaining <= 0 {
+		close(node.out)
+		<-quitChan
+		return
 	}
 }

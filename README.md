@@ -16,11 +16,12 @@ Here are the currently avaiable node types:
 * Add/Sub/Mul (variadic, type promotion)
 * FanIn
 * _(FanOut is automatic and implicit, by branching a node's output to multiple other)_
+* Assembler (variadic)
 
 A node can either be run in a step by step manner by calling its `Run()` method, or it can be looped over.
 An `Executor` facility permits running or looping a node concurrently, while being easily interruptible.
 
-An `Assembler` facility permits collecting exactly one value from each input `Node` and returning them as an array.
+The `AssemblerNode` permits collecting exactly one value from each input `Node` and returning them as a slice.
 This helps constructing variadic nodes, as well as synchronizing nodes' work.
 It can optionaly verify that each value is of a given type.
 

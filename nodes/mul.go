@@ -18,11 +18,11 @@ type MulNode struct {
 	out				DataChan
 	inNodes			[]Node
 	typeEnforced	reflect.Type
-	assembler		*Assembler
+	assembler		*AssemblerNode
 }
 
 func NewMulNode(typeEnforced reflect.Type, inNodes ...Node) *MulNode {
-	return &MulNode{make(DataChan), inNodes, typeEnforced, NewAssembler(typeEnforced, inNodes...)};
+	return &MulNode{make(DataChan), inNodes, typeEnforced, NewAssemblerNode(typeEnforced, inNodes...)};
 }
 
 func (node MulNode) Run(quitChan executor.QuitChan) {
@@ -35,10 +35,11 @@ func (node MulNode) Run(quitChan executor.QuitChan) {
 			case <-quitChan:
 				close(node.out)
 				break CalcLoop
-			case inputs, ok := <-assemblerOut:
+			case val, ok := <-assemblerOut:
 				if !ok {
 					break CalcLoop
 				}
+				inputs := val.([]Data)
 				out = node.out
 				if len(inputs) == 0 {
 					if node.typeEnforced != nil {

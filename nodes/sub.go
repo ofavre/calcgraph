@@ -18,11 +18,11 @@ type SubNode struct {
 	out				DataChan
 	inNodes			[]Node
 	typeEnforced	reflect.Type
-	assembler		*Assembler
+	assembler		*AssemblerNode
 }
 
 func NewSubNode(typeEnforced reflect.Type, inNodes ...Node) *SubNode {
-	return &SubNode{make(DataChan), inNodes, typeEnforced, NewAssembler(typeEnforced, inNodes...)};
+	return &SubNode{make(DataChan), inNodes, typeEnforced, NewAssemblerNode(typeEnforced, inNodes...)};
 }
 
 func (node SubNode) Run(quitChan executor.QuitChan) {
@@ -35,10 +35,11 @@ func (node SubNode) Run(quitChan executor.QuitChan) {
 			case <-quitChan:
 				close(node.out)
 				break CalcLoop
-			case inputs, ok := <-assemblerOut:
+			case val, ok := <-assemblerOut:
 				if !ok {
 					break CalcLoop
 				}
+				inputs := val.([]Data)
 				out = node.out
 				if len(inputs) == 0 {
 					if node.typeEnforced != nil {
